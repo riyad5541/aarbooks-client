@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthProvider';
+import useToken from '../../hooks/useToken';
 
 const Signup = () => {
 
@@ -13,7 +14,12 @@ const Signup = () => {
     const { createUser, updateUser,providerLogin } = useContext(AuthContext)
     const [signUpError, setSignUPError] = useState('');
     const [createdUserEmail, setCreatedUserEmail] = useState('')
+    const [token] = useToken(createdUserEmail);
     const navigate = useNavigate();
+
+    if(token){
+        navigate('/');
+    }
 
     const handleSignUp = (data) => {
         console.log(data)
@@ -28,7 +34,7 @@ const Signup = () => {
                 updateUser(userInfo)
                     .then(() => {
                         console.log(data.name,data.email,data.option)
-                        // saveUser(data.name, data.email, data.option);
+                        saveUser(data.name, data.email, data.option);
                     })
                     .catch(err => console.log(err));
             })
@@ -48,10 +54,27 @@ const Signup = () => {
               role: "Buyer",
             };
             toast.success("User Created Successfully");
-            // saveUser(googleUser.name, googleUser.email, googleUser.role);
+            saveUser(googleUser.name, googleUser.email, googleUser.role);
           })
           .catch((error) => console.log(error));
       };
+
+      const saveUser = (name, email, role) => {
+        const user = { name, email ,role};
+        fetch('http://localhost:5000/users', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(user)
+        })
+            .then(res => res.json())
+            .then(data => {
+                setCreatedUserEmail(email);
+                // navigate('/');
+                // setCreatedUserEmail(email);
+            })
+    }
     return (
         <div>
             <div className='h-[800px] flex justify-center items-center'>

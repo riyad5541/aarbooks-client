@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthProvider';
+import useToken from '../../hooks/useToken';
 
 const Login = () => {
     const googleProvider = new GoogleAuthProvider();
@@ -11,10 +12,15 @@ const Login = () => {
     const { signIn, providerLogin } = useContext(AuthContext);
     const [loginError, setLoginError] = useState('');
     const [loginUserEmail, setLoginUserEmail] = useState('');
+    const [token] = useToken(loginUserEmail);
     const location = useLocation();
     const navigate = useNavigate();
 
     const from = location.state?.from?.pathname || '/';
+
+    if(token){
+        navigate(from, {replace:true});
+    }
 
     const handleLogin = data => {
         console.log(data);
@@ -23,7 +29,6 @@ const Login = () => {
             .then(result => {
                 const user = result.user;
                 console.log(user);
-                navigate(from, {replace:true});
                 setLoginUserEmail(data.email);
                
             })
@@ -44,10 +49,26 @@ const Login = () => {
               role: "Buyer",
             };
             toast.success("User Created Successfully");
-            // saveUser(googleUser);
+            saveUser(googleUser);
           })
           .catch((error) => console.log(error));
       };
+
+      const saveUser = (googleUser) => {
+        fetch('http://localhost:5000/users', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(googleUser)
+        })
+            .then(res => res.json())
+            .then(data => {
+                setLoginUserEmail(googleUser.email);
+                // navigate('/');
+                // setCreatedUserEmail(email);
+            })
+    }
     return (
         <div className='h-[800px] flex justify-center items-center'>
             <div className='w-96 p-7'>
